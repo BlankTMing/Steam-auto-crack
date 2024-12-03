@@ -91,7 +91,7 @@ namespace SteamAutoCrack.Core.Utils
                 {
                     try
                     {
-                        Log.ForContext("SourceContext", sender.GetType().Assembly.GetName().Name.Replace(".", ""))
+                        Log.ForContext("SourceContext", sender?.GetType().Assembly.GetName().Name?.Replace(".", ""))
                             .Debug(e.Message);
                     }
                     catch
@@ -178,9 +178,10 @@ namespace SteamAutoCrack.Core.Utils
                     var bError = false;
                     _log.Information("Unpacking file \"{path}\"...", path);
                     foreach (var p in steamlessPlugins)
+                    {
                         if (p.CanProcessFile(path))
                         {
-                            if (p.ProcessFile(path, steamlessOptions))
+                            if (await Task.Run(() => p.ProcessFile(path, steamlessOptions)))
                             {
                                 bSuccess = true;
                                 bError = false;
@@ -200,10 +201,10 @@ namespace SteamAutoCrack.Core.Utils
                             else
                             {
                                 bError = true;
-                                _log.Warning("Failed to unpack file \"{path}\".(File not Packed/Other Protector)",
-                                    path);
+                                _log.Warning("Failed to unpack file \"{path}\".(File not Packed/Other Protector)", path);
                             }
                         }
+                    }
 
                     if (!bSuccess && !bError)
                         _log.Warning("Cannot to unpack file \"{path}\".(File not Packed/Other Protector)", path);

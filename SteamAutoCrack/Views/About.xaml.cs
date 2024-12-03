@@ -24,8 +24,8 @@ public partial class About : Window
         InitializeComponent();
         DataContext = viewModel;
         _log.Information("Steam Auto Crack " + Assembly.GetExecutingAssembly().GetName().Version);
-        _log.Information("Github: https://gitlab.com/oureveryday/Steam-auto-crack");
-        _log.Information("Gitlab: https://github.com/oureveryday/Steam-auto-crack");
+        _log.Information("Github: https://github.com/SteamAutoCracks/Steam-auto-crack");
+        _log.Information("Gitlab: https://gitlab.com/oureveryday/Steam-auto-crack");
     }
 
     public event AboutClosingHandler ClosingEvent;

@@ -80,7 +80,7 @@ public partial class MainWindow
     {
         var selector = new OpenFolderDialog();
         selector.Multiselect = false;
-        if ((bool)selector.ShowDialog()) viewModel.OutputPath = selector.FolderName;
+        if (selector.ShowDialog() == true) viewModel.OutputPath = selector.FolderName;
     }
 
     #endregion
@@ -159,7 +159,7 @@ public partial class MainWindow
     private void AppIDFinderClosedStart()
     {
         if (bStarted) return;
-        Task.Run(async () =>
+        Task.Run(() =>
         {
             bAppIDFinderOpened = false;
             Dispatcher.Invoke(() =>
@@ -258,7 +258,7 @@ public partial class MainWindow
             {
                 var selector = new OpenFolderDialog();
                 selector.Multiselect = false;
-                if ((bool)selector.ShowDialog()) viewModel.InputPath = selector.FolderName;
+                if (selector.ShowDialog() == true) viewModel.InputPath = selector.FolderName;
             }
 
             if (result == MessageBoxResult.No)
@@ -267,7 +267,7 @@ public partial class MainWindow
                 selector.Multiselect = false;
                 selector.Filter = "Game Files|*.exe;steam_api.dll;steam_api64.dll" +
                                   "|All Files|*.*";
-                if ((bool)selector.ShowDialog()) viewModel.InputPath = selector.FileName;
+                if (selector.ShowDialog() == true) viewModel.InputPath = selector.FileName;
             }
         }
         catch (Exception ex)

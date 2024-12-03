@@ -18,11 +18,11 @@ public class Processor : IProcessor
         try
         {
             _log.Information("Starting process...");
-            EMUGameInfoConfig eMUGameInfoConfig = null;
-            EMUConfig eMUConfigs = null;
-            SteamStubUnpackerConfig steamStubUnpackerConfigs = null;
-            EMUApplyConfig emuApplyConfigs = null;
-            GenCrackOnlyConfig genCrackOnlyConfigs = null;
+            EMUGameInfoConfig eMUGameInfoConfig = new();
+            EMUConfig eMUConfigs = new();
+            SteamStubUnpackerConfig steamStubUnpackerConfigs = new();
+            EMUApplyConfig emuApplyConfigs = new();
+            GenCrackOnlyConfig genCrackOnlyConfigs = new();
             if ((Config.Config.ProcessConfigs.Unpack || Config.Config.ProcessConfigs.ApplyEMU ||
                  Config.Config.ProcessConfigs.GenerateCrackOnly) && !File.Exists(Config.Config.InputPath) &&
                 !Directory.Exists(Config.Config.InputPath)) throw new Exception("Invaild input path.");
@@ -97,11 +97,11 @@ public class Processor : IProcessor
         try
         {
             _log.Information("Starting process...");
-            EMUGameInfoConfig eMUGameInfoConfig = null;
-            EMUConfig eMUConfigs = null;
-            SteamStubUnpackerConfig steamStubUnpackerConfigs = null;
-            EMUApplyConfig emuApplyConfigs = null;
-            GenCrackOnlyConfig genCrackOnlyConfigs = null;
+            EMUGameInfoConfig eMUGameInfoConfig = new();
+            EMUConfig eMUConfigs = new();
+            SteamStubUnpackerConfig steamStubUnpackerConfigs = new();
+            EMUApplyConfig emuApplyConfigs = new();
+            GenCrackOnlyConfig genCrackOnlyConfigs = new();
             if ((Config.Config.ProcessConfigs.Unpack || Config.Config.ProcessConfigs.ApplyEMU ||
                  Config.Config.ProcessConfigs.GenerateCrackOnly) && !File.Exists(Config.Config.InputPath) &&
                 !Directory.Exists(Config.Config.InputPath)) throw new Exception("Invaild input path.");

@@ -77,7 +77,10 @@ public class SteamAppList
             var response = await client.GetAsync(steamapplisturl).ConfigureAwait(false);
             var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var steamApps = DeserializeSteamApps(responseBody);
-            foreach (var appListApp in steamApps.AppList.Apps) appList.Add(appListApp);
+            if (steamApps?.AppList?.Apps != null)
+            {
+                foreach (var appListApp in steamApps.AppList.Apps) appList.Add(appListApp);
+            }
             await db.InsertAllAsync(appList, "OR IGNORE").ConfigureAwait(false);
             _log.Information("Updated Steam App list.");
         }
@@ -103,13 +106,14 @@ public class SteamAppList
         _log.Debug("Waiting for Steam App list initialized...");
         while (!bInited)
         {
+            await Task.Delay(100);
         }
     }
 
-    private static SteamAppsV2 DeserializeSteamApps(string json)
+    private static SteamAppsV2? DeserializeSteamApps(string json)
     {
         var data = JsonSerializer.Deserialize<SteamAppsV2>(json);
-        return data;
+        return data ?? new SteamAppsV2 { AppList = new AppList { Apps = new List<SteamApp>() } };
     }
 
     public static async Task<IEnumerable<SteamApp>> GetListOfAppsByName(string name)
@@ -122,7 +126,11 @@ public class SteamAppList
         if (uint.TryParse(name, out var appid))
         {
             var app = await GetAppById(appid).ConfigureAwait(false);
-            listOfAppsByName.Remove(listOfAppsByName.Find(d => d.AppId == appid));
+            var appToRemove = listOfAppsByName.Find(d => d.AppId == appid);
+            if (appToRemove != null)
+            {
+                listOfAppsByName.Remove(appToRemove);
+            }
             if (app != null) listOfAppsByName.Insert(0, app);
         }
 
@@ -140,7 +148,11 @@ public class SteamAppList
         if (uint.TryParse(name, out var appid))
         {
             var app = await GetAppById(appid).ConfigureAwait(false);
-            listOfAppsByName.Remove(listOfAppsByName.Find(d => d.AppId == appid));
+            var appToRemove = listOfAppsByName.Find(d => d.AppId == appid);
+            if (appToRemove != null)
+            {
+                listOfAppsByName.Remove(appToRemove);
+            }
             if (app != null) listOfAppsByName.Insert(0, app);
         }
 
@@ -151,17 +163,17 @@ public class SteamAppList
     {
         _log?.Debug($"Trying to get app name for app: {name}");
         var app = await db.Table<SteamApp>()
-            .FirstOrDefaultAsync(x => x.Name.Equals(name))
+            .FirstOrDefaultAsync(x => x.Name != null && x.Name.Equals(name))
             .ConfigureAwait(false);
-        if (app != null) _log.Debug($"Successfully got app name for app: {app}");
+        if (app != null) _log?.Debug($"Successfully got app name for app: {app}");
         return app;
     }
 
     public static async Task<SteamApp> GetAppById(uint appid)
     {
-        _log.Debug($"Trying to get app with ID {appid}");
+        _log?.Debug($"Trying to get app with ID {appid}");
         var app = await db.Table<SteamApp>().FirstOrDefaultAsync(x => x.AppId.Equals(appid)).ConfigureAwait(false);
-        if (app != null) _log.Debug($"Successfully got app {app}");
+        if (app != null) _log?.Debug($"Successfully got app {app}");
         return app;
     }
 }

@@ -72,7 +72,7 @@ internal class AppIDFinderViewModel : INotifyPropertyChanged
 
     private IEnumerable<SteamApp> _apps;
 
-    public SteamApp Selected { get; set; }
+    public SteamApp Selected { get; set; } = new();
 
     private string _SearchBtnString = "Search";
     private string _AppName = string.Empty;

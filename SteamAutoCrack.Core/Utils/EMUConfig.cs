@@ -92,7 +92,7 @@ public class EMUConfig
     /// </summary>
     public bool EnableOverlay { get; set; } = false;
 
-    public string? ConfigPath { get; set; } = Path.Combine(Config.Config.TempPath, "steam_settings");
+    public string ConfigPath { get; set; } = Path.Combine(Config.Config.TempPath, "steam_settings");
 
     public void SetLaugnageFromString(string str)
     {
@@ -187,7 +187,7 @@ public class EMUConfigDefault
     /// </summary>
     public static readonly bool EnableOverlay = false;
 
-    public static readonly string? ConfigPath = Path.Combine(Config.Config.TempPath, "steam_settings");
+    public static readonly string ConfigPath = Path.Combine(Config.Config.TempPath, "steam_settings");
 
     public static EMUConfig.Languages GetDefaultLanguage()
     {

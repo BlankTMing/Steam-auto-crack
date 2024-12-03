@@ -13,7 +13,8 @@ namespace SteamAutoCrack.Core.Utils
         private bool bGotlatestcommit;
         private bool bInited;
         private readonly CancellationTokenSource cancellationTokenSource = new();
-        private string currentcommit;
+        private string currentcommit = string.Empty;
+        private string latestcommit = string.Empty;
 
         private readonly List<string> goldberguselessFolders = new()
         {
@@ -22,8 +23,6 @@ namespace SteamAutoCrack.Core.Utils
             "release",
             "regular"
         };
-
-        private string latestcommit;
 
         public EMUUpdater()
         {
@@ -156,63 +155,69 @@ namespace SteamAutoCrack.Core.Utils
 
         private async Task Extract(string archivePath)
         {
-            var errorOccured = false;
-            _log.Debug("Start extraction...");
-            Directory.Delete(Config.Config.GoldbergPath, true);
-            Directory.CreateDirectory(Config.Config.GoldbergPath);
-
-            var dllPaths = AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES").ToString();
-
-            var pathsList = new List<string>(dllPaths.Split(';'));
-            var dllPath = "";
-
-            foreach (var path in pathsList)
+            await Task.Run(() =>
             {
-                var fullPath = Path.Combine(path, "x86", "7z.dll");
-                if (File.Exists(fullPath))
+                var errorOccured = false;
+                _log.Debug("Start extraction...");
+                Directory.Delete(Config.Config.GoldbergPath, true);
+                Directory.CreateDirectory(Config.Config.GoldbergPath);
+
+                var dllPaths = AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES")?.ToString();
+
+                var pathsList = new List<string>(dllPaths?.Split(';'));
+                var dllPath = "";
+
+                foreach (var path in pathsList)
                 {
-                    dllPath = fullPath;
-                    break;
+                    var fullPath = Path.Combine(path, "x86", "7z.dll");
+                    if (File.Exists(fullPath))
+                    {
+                        dllPath = fullPath;
+                        break;
+                    }
                 }
-            }
 
-            if (string.IsNullOrEmpty(dllPath)) throw new FileNotFoundException("7z.dll not found in .Net temp path.");
+                if (string.IsNullOrEmpty(dllPath)) throw new FileNotFoundException("7z.dll not found in .Net temp path.");
 
-            SharpSevenZipBase.SetLibraryPath(dllPath);
+                SharpSevenZipBase.SetLibraryPath(dllPath);
 
-            using (var archive = new SharpSevenZipExtractor(File.Open(archivePath, FileMode.Open)))
-            {
-                try
+                using (var archive = new SharpSevenZipExtractor(File.Open(archivePath, FileMode.Open)))
                 {
-                    Directory.CreateDirectory(Config.Config.GoldbergPath);
-                    archive.ExtractArchive(Config.Config.GoldbergPath);
-                    CopyDirectory(new DirectoryInfo(Path.Combine(Config.Config.GoldbergPath, "release")),
-                        new DirectoryInfo(Config.Config.GoldbergPath));
-                    CopyDirectory(new DirectoryInfo(Path.Combine(Config.Config.GoldbergPath, "regular")),
-                        new DirectoryInfo(Config.Config.GoldbergPath));
+                    try
+                    {
+                        Directory.CreateDirectory(Config.Config.GoldbergPath);
+                        archive.ExtractArchive(Config.Config.GoldbergPath);
+                        CopyDirectory(new DirectoryInfo(Path.Combine(Config.Config.GoldbergPath, "release")),
+                            new DirectoryInfo(Config.Config.GoldbergPath));
+                        CopyDirectory(new DirectoryInfo(Path.Combine(Config.Config.GoldbergPath, "regular")),
+                            new DirectoryInfo(Config.Config.GoldbergPath));
+                    }
+                    catch (Exception ex)
+                    {
+                        errorOccured = true;
+                        _log.Error(ex, "Error while trying to extract.");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    errorOccured = true;
-                    _log.Error(ex, "Error while trying to extract.");
-                }
-            }
 
-            _log.Information("Extraction was successful.");
+                _log.Information("Extraction was successful.");
+            });
         }
 
         private async Task Clean(string goldbergPath)
         {
-            try
+            await Task.Run(() =>
             {
-                _log.Debug("Start Clean Goldberg emulator Files...");
-                foreach (var path in goldberguselessFolders) Directory.Delete(Path.Combine(goldbergPath, path), true);
-                _log.Information("Clean was successful.");
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex, "Failed in clean Goldberg emulator files.");
-            }
+                try
+                {
+                    _log.Debug("Start Clean Goldberg emulator Files...");
+                    foreach (var path in goldberguselessFolders) Directory.Delete(Path.Combine(goldbergPath, path), true);
+                    _log.Information("Clean was successful.");
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, "Failed in clean Goldberg emulator files.");
+                }
+            });
         }
 
         private string GetCurrentGoldbergVersion()

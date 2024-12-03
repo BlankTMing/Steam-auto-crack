@@ -4,18 +4,18 @@
 
 [中文](Readme.zh-CN.md)
 
-![GitHub all releases](https://img.shields.io/github/downloads/oureveryday/Steam-auto-crack/total?color=brightgreen&label=Total%20downloads)
-![GitHub release (latest by date)](https://img.shields.io/github/downloads/oureveryday/Steam-auto-crack/latest/total?color=green&label=Latest%20version%20downloads&link=https://github.com/oureveryday/Steam-auto-crack/releases)
-![GitHub Repo stars](https://img.shields.io/github/stars/oureveryday/Steam-auto-crack?color=yellow&label=Stars)
+![GitHub all releases](https://img.shields.io/github/downloads/SteamAutoCracks/Steam-auto-crack/total?color=brightgreen&label=Total%20downloads)
+![GitHub release (latest by date)](https://img.shields.io/github/downloads/SteamAutoCracks/Steam-auto-crack/latest/total?color=green&label=Latest%20version%20downloads&link=https://github.com/oureveryday/Steam-auto-crack/releases)
+![GitHub Repo stars](https://img.shields.io/github/stars/SteamAutoCracks/Steam-auto-crack?color=yellow&label=Stars)
 
 Automatic Crack Games With SteamStub and Steam API.  
 Latest Version 3.0 Using .Net 8.0.  
-[Latest Release](https://github.com/oureveryday/Steam-auto-crack/releases)  
-[Wiki](https://github.com/oureveryday/Steam-auto-crack/wiki)  
+[Latest Release](https://github.com/SteamAutoCracks/Steam-auto-crack/releases)  
+[Wiki](https://github.com/SteamAutoCracks/Steam-auto-crack/wiki)  
 [Official Disrord](https://discord.gg/BZQtrBSUnd)  
 [Official Telegram](https://t.me/SteamAutoCrack)
 
-* Github: <https://github.com/oureveryday/Steam-auto-crack>
+* Github: <https://github.com/SteamAutoCracks/Steam-auto-crack>
 * Gitlab: <https://gitlab.com/oureveryday/Steam-auto-crack>
 
 * If you like this project, you can just give this project a star or donate me. (Donation methods are at the bottom)
@@ -40,7 +40,7 @@ Latest Version 3.0 Using .Net 8.0.
 
 ## Usage
 
-* Download from [Github Releases](https://github.com/oureveryday/Steam-auto-crack/releases).
+* Download from [Github Releases](https://github.com/SteamAutoCracks/Steam-auto-crack/releases).
 
 ## Bugs
 

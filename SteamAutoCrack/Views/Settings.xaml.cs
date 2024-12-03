@@ -56,7 +56,7 @@ public partial class Settings : Window
 
     private async void Download_Click(object sender, RoutedEventArgs e)
     {
-        Task.Run(async () =>
+        await Task.Run(async () =>
         {
             var updater = new EMUUpdater();
             await updater.Init();

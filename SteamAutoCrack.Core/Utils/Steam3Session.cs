@@ -66,10 +66,10 @@ internal class Steam3Session
 
         steamClient = new SteamClient();
 
-        steamUser = steamClient.GetHandler<SteamUser>();
-        steamApps = steamClient.GetHandler<SteamApps>();
-        steamCloud = steamClient.GetHandler<SteamCloud>();
-        var steamUnifiedMessages = steamClient.GetHandler<SteamUnifiedMessages>();
+        steamUser = steamClient.GetHandler<SteamUser>()!;
+        steamApps = steamClient.GetHandler<SteamApps>()!;
+        steamCloud = steamClient.GetHandler<SteamCloud>()!;
+        var steamUnifiedMessages = steamClient.GetHandler<SteamUnifiedMessages>()!;
         steamPublishedFile = steamUnifiedMessages.CreateService<IPublishedFile>();
         steamInventory = steamUnifiedMessages.CreateService<IInventory>();
 
@@ -162,52 +162,11 @@ internal class Steam3Session
             }, () => { return completed; });
     }
 
-    public void RequestPackageInfo(IEnumerable<uint> packageIds)
-    {
-        var packages = packageIds.ToList();
-        packages.RemoveAll(pid => PackageInfo.ContainsKey(pid));
-
-        if (packages.Count == 0 || bAborted)
-            return;
-
-        var completed = false;
-        Action<SteamApps.PICSProductInfoCallback> cbMethod = packageInfo =>
-        {
-            completed = !packageInfo.ResponsePending;
-
-            foreach (var package_value in packageInfo.Packages)
-            {
-                var package = package_value.Value;
-                PackageInfo[package.ID] = package;
-            }
-
-            foreach (var package in packageInfo.UnknownPackages) PackageInfo[package] = null;
-        };
-
-        var packageRequests = new List<SteamApps.PICSRequest>();
-
-        foreach (var package in packages)
-        {
-            var request = new SteamApps.PICSRequest(package);
-
-            if (PackageTokens.TryGetValue(package, out var token)) request.AccessToken = token;
-
-            packageRequests.Add(request);
-        }
-
-        WaitUntilCallback(
-            () =>
-            {
-                callbacks.Subscribe(steamApps.PICSGetProductInfo(new List<SteamApps.PICSRequest>(), packageRequests),
-                    cbMethod);
-            }, () => { return completed; });
-    }
-
     public string GetInventoryDigest(uint appId)
     {
         var itemDefMeta = new CInventory_GetItemDefMeta_Request { appid = appId };
         var completed = false;
-        string data = null;
+        string data = String.Empty;
 
         Action<SteamUnifiedMessages.ServiceMethodResponse> cbMethod = callback =>
         {

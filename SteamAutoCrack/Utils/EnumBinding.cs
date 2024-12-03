@@ -22,14 +22,14 @@ public class EnumDescriptionConverter : IValueConverter
     private string GetEnumDescription(Enum enumObj)
     {
         var fieldInfo = enumObj.GetType().GetField(enumObj.ToString());
-        var attribArray = fieldInfo.GetCustomAttributes(false);
+        var attribArray = fieldInfo?.GetCustomAttributes(false);
 
-        if (attribArray.Length == 0)
+        if (attribArray == null || attribArray.Length == 0)
         {
             return enumObj.ToString();
         }
 
-        DescriptionAttribute attrib = null;
+        DescriptionAttribute? attrib = null;
 
         foreach (var att in attribArray)
             if (att is DescriptionAttribute)

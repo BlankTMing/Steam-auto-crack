@@ -44,8 +44,8 @@ public class ListViewSink : ILogEventSink
         }
 
         logEvent.Properties.TryGetValue("SourceContext", out SourceContext);
-        SourceContextStr = SourceContext.ToString();
-        SourceContextStr = SourceContextStr.Substring(SourceContextStr.LastIndexOf('.') + 1).Replace("\"", "")
+        SourceContextStr = SourceContext?.ToString();
+        SourceContextStr = SourceContextStr?.Substring(SourceContextStr.LastIndexOf('.') + 1).Replace("\"", "")
             .Replace("\\", "");
         Application.Current.Dispatcher.Invoke((Action)(() =>
         {

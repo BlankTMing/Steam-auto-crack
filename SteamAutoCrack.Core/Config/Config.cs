@@ -26,32 +26,32 @@ public class Config
     /// <summary>
     ///     Temp file path.
     /// </summary>
-    public static string? TempPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TEMP");
+    public static string TempPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TEMP");
 
     /// <summary>
     ///     Config file path.
     /// </summary>
-    public static string? ConfigPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+    public static string ConfigPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
 
     /// <summary>
     ///     Steam emulator config path.
     /// </summary>
-    public static string? EMUConfigPath { get; set; } = Path.Combine(TempPath, "steam_settings");
+    public static string EMUConfigPath { get; set; } = Path.Combine(TempPath, "steam_settings");
 
     /// <summary>
     ///     Path of steam emulator files.
     /// </summary>
-    public static string? GoldbergPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Goldberg");
+    public static string GoldbergPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Goldberg");
 
     /// <summary>
     ///     Path to process.
     /// </summary>
-    public static string? InputPath { get; set; } = string.Empty;
+    public static string InputPath { get; set; } = string.Empty;
 
     /// <summary>
     ///     Goldberg emulator job ID.
     /// </summary>
-    public static string? GoldbergVersion { get; set; } = GetGoldbergVersion();
+    public static string GoldbergVersion { get; set; } = GetGoldbergVersion();
 
     /// <summary>
     ///     Enable Crack Applier Mode.
@@ -218,7 +218,6 @@ public class Config
 
     public static Languages GetDefaultLanguage()
     {
-        var language = EMUConfig.Languages.english;
         var culture = CultureInfo.InstalledUICulture.Name;
         switch (culture.Substring(0, 2))
         {
@@ -261,7 +260,7 @@ public class EMUApplyConfigs
     /// <summary>
     ///     Emulator save location.
     /// </summary>
-    public string? LocalSave { get; set; } = EMUApplyConfigDefault.LocalSave;
+    public string LocalSave { get; set; } = EMUApplyConfigDefault.LocalSave;
 
     /// <summary>
     ///     Enable change default emulator save location.
@@ -443,7 +442,7 @@ public class EMUGameInfoConfigs
     /// <summary>
     ///     Required when using Steam official Web API.
     /// </summary>
-    public string? SteamWebAPIKey { get; set; } = EMUGameInfoConfigDefault.SteamWebAPIKey;
+    public string SteamWebAPIKey { get; set; } = EMUGameInfoConfigDefault.SteamWebAPIKey;
 
     /// <summary>
     ///     Enable generate game achievement images.
@@ -492,7 +491,7 @@ public class GenCrackOnlyConfigs
     /// <summary>
     ///     Crack only file output path.
     /// </summary>
-    public string? OutputPath { get; set; } = GenCrackOnlyConfigDefault.OutputPath;
+    public string OutputPath { get; set; } = GenCrackOnlyConfigDefault.OutputPath;
 
     /// <summary>
     ///     Create crack only readme file.

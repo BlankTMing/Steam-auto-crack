@@ -4,18 +4,18 @@
 
 [English](Readme.md)
 
-![GitHub all releases](https://img.shields.io/github/downloads/oureveryday/Steam-auto-crack/total?color=brightgreen&label=总下载量)
-![GitHub release (latest by date)](https://img.shields.io/github/downloads/oureveryday/Steam-auto-crack/latest/total?color=green&label=最新版本下载量&link=https://github.com/oureveryday/Steam-auto-crack/releases)
-![GitHub Repo stars](https://img.shields.io/github/stars/oureveryday/Steam-auto-crack?color=yellow&label=星星)
+![GitHub all releases](https://img.shields.io/github/downloads/SteamAutoCracks/Steam-auto-crack/total?color=brightgreen&label=总下载量)
+![GitHub release (latest by date)](https://img.shields.io/github/downloads/SteamAutoCracks/Steam-auto-crack/latest/total?color=green&label=最新版本下载量&link=https://github.com/oureveryday/Steam-auto-crack/releases)
+![GitHub Repo stars](https://img.shields.io/github/stars/SteamAutoCracks/Steam-auto-crack?color=yellow&label=星星)
 
 使用 SteamStub 和 Steam API 自动破解游戏。  
 最新版本3.0使用 .Net 8.0。  
-[最新发布](https://github.com/oureveryday/Steam-auto-crack/releases)  
-[维基](https://github.com/oureveryday/Steam-auto-crack/wiki)  
+[最新发布](https://github.com/SteamAutoCracks/Steam-auto-crack/releases)  
+[维基](https://github.com/SteamAutoCracks/Steam-auto-crack/wiki)  
 [官方 Disrord](https://discord.gg/BZQtrBSUnd)  
 [官方 Telegram](https://t.me/SteamAutoCrack)
 
-* Github: <https://github.com/oureveryday/Steam-auto-crack>
+* Github: <https://github.com/SteamAutoCracks/Steam-auto-crack>
 * Gitlab: <https://gitlab.com/oureveryday/Steam-auto-crack>
 
 * 如果你喜欢这个项目，你可以给这个项目一个星星或者捐赠我。（捐赠方式在底部）
@@ -40,7 +40,7 @@
 
 ## 使用
 
-* 从[Github Releases](https://github.com/oureveryday/Steam-auto-crack/releases)下载。
+* 从[Github Releases](https://github.com/SteamAutoCracks/Steam-auto-crack/releases)下载。
 
 ## 错误
 

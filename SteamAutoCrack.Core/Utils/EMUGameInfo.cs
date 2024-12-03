@@ -35,9 +35,9 @@ public class EMUGameInfoConfig
     /// <summary>
     ///     Required when using Steam official Web API.
     /// </summary>
-    public string? SteamWebAPIKey { get; set; } = string.Empty;
+    public string SteamWebAPIKey { get; set; } = string.Empty;
 
-    public string? ConfigPath { get; set; } = Path.Combine(Config.Config.TempPath, "steam_settings");
+    public string ConfigPath { get; set; } = Path.Combine(Config.Config.TempPath, "steam_settings");
 
     /// <summary>
     ///     Enable generate game achievement images.
@@ -91,7 +91,7 @@ public class EMUGameInfoConfigDefault
     /// <summary>
     ///     Required when using Steam official Web API.
     /// </summary>
-    public static string? SteamWebAPIKey { get; set; } = string.Empty;
+    public static string SteamWebAPIKey { get; set; } = string.Empty;
 }
 
 public interface IEMUGameInfo
@@ -156,10 +156,9 @@ internal abstract class Generator
 
     protected readonly ILogger _log;
     protected readonly uint AppID;
-    protected readonly string? ConfigPath;
+    protected readonly string ConfigPath;
     protected readonly bool GenerateImages;
-    protected readonly string? SteamWebAPIKey;
-    protected readonly string? TempPath;
+    protected readonly string SteamWebAPIKey;
     protected readonly bool UseSteamWebAppList;
     protected readonly bool UseXan105API = true;
     public Ini config_app = new();
@@ -181,44 +180,47 @@ internal abstract class Generator
 
     public abstract Task InfoGenerator();
 
-    protected async Task GenerateBasic()
+    protected Task GenerateBasic()
     {
-        try
+        return Task.Run(() =>
         {
-            _log.Debug("Generating basic infos...");
-            if (Directory.Exists(ConfigPath))
+            try
             {
-                Directory.Delete(ConfigPath, true);
-                _log.Debug("Deleted previous steam_settings folder.");
+                _log.Debug("Generating basic infos...");
+                if (Directory.Exists(ConfigPath))
+                {
+                    Directory.Delete(ConfigPath, true);
+                    _log.Debug("Deleted previous steam_settings folder.");
+                }
+                Directory.CreateDirectory(ConfigPath);
+                _log.Debug("Created steam_settings folder.");
+               
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _log.Error(ex, "Failed to access steam_settings path. (Try run SteamAutoCrack with administrative rights)");
+                throw new Exception("Failed to access steam_settings path.");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to access steam_settings path.");
+                throw new Exception("Failed to access steam_settings path.");
             }
 
-            Directory.CreateDirectory(ConfigPath);
-            _log.Debug("Created steam_settings folder.");
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _log.Error(ex, "Failed to access steam_settings path. (Try run SteamAutoCrack with administrative rights)");
-            throw new Exception("Failed to access steam_settings path.");
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Failed to access steam_settings path.");
-            throw new Exception("Failed to access steam_settings path.");
-        }
+            _log.Debug("Outputting game info to {0}", Path.GetFullPath(ConfigPath));
+            try
+            {
+                File.WriteAllText(Path.Combine(ConfigPath, "steam_appid.txt"), AppID.ToString());
+                _log.Debug("Generated steam_appid.txt");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to write steam_appid.txt.");
+                throw new Exception("Failed to write steam_appid.txt.");
+            }
 
-        _log.Debug("Outputting game info to {0}", Path.GetFullPath(ConfigPath));
-        try
-        {
-            File.WriteAllText(Path.Combine(ConfigPath, "steam_appid.txt"), AppID.ToString());
-            _log.Debug("Generated steam_appid.txt");
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Failed to write steam_appid.txt.");
-            throw new Exception("Failed to write steam_appid.txt.");
-        }
-
-        _log.Debug("Generated basic infos.");
+            _log.Debug("Generated basic infos.");
+        });
     }
 
     protected async Task<bool> GetGameSchema()
@@ -345,7 +347,7 @@ internal abstract class Generator
                     .GetProperty("achievements");
 
             achievementList = JsonSerializer.Deserialize<List<Achievement>>(achievementData.GetRawText());
-            if (achievementList.Count > 0)
+            if (achievementList?.Count > 0)
             {
                 var empty = achievementList.Count == 1 ? "" : "s";
                 _log.Debug($"Successfully got {achievementList.Count} achievement{empty}.");
@@ -408,62 +410,65 @@ internal abstract class Generator
 
     protected async Task GenerateStats()
     {
-        try
+        await Task.Run(() =>
         {
-            if (UseXan105API)
+            try
             {
-                _log.Information("Using xan105 API, skipping generate stats...");
-                return;
+                if (UseXan105API)
+                {
+                    _log.Information("Using xan105 API, skipping generate stats...");
+                    return;
+                }
+
+                _log.Debug("Generating stats...");
+                var statData = GameSchema.RootElement.GetProperty("game")
+                    .GetProperty("availableGameStats")
+                    .GetProperty("stats");
+                var Count = 0;
+
+                _log.Debug("Saving stats...");
+                var sw = new StreamWriter(Path.Combine(ConfigPath, "stats.txt"));
+                var newline = "";
+                foreach (var stat in statData.EnumerateArray())
+                {
+                    var name = "";
+                    var defaultValue = "";
+
+                    if (stat.TryGetProperty("name", out var _name)) name = _name.GetString();
+                    if (stat.TryGetProperty("defaultvalue", out var _defaultvalue)) defaultValue = _defaultvalue.ToString();
+                    sw.Write(newline + name + "=int=" + defaultValue);
+                    newline = Environment.NewLine;
+                    Count++;
+                }
+
+                sw.Close();
+                if (Count > 0)
+                {
+                    var empty = Count == 1 ? "" : "s";
+                    _log.Debug($"Successfully got {Count} stat{empty}.");
+                }
+                else
+                {
+                    File.Delete(Path.Combine(ConfigPath, "stats.txt"));
+                    _log.Debug("No stat found.");
+                    return;
+                }
+            }
+            catch (KeyNotFoundException)
+            {
+                _log.Information("No stats, skipping...");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to generate stats. Skipping...");
             }
 
-            _log.Debug("Generating stats...");
-            var statData = GameSchema.RootElement.GetProperty("game")
-                .GetProperty("availableGameStats")
-                .GetProperty("stats");
-            var Count = 0;
-
-            _log.Debug("Saving stats...");
-            var sw = new StreamWriter(Path.Combine(ConfigPath, "stats.txt"));
-            var newline = "";
-            foreach (var stat in statData.EnumerateArray())
-            {
-                var name = "";
-                var defaultValue = "";
-
-                if (stat.TryGetProperty("name", out var _name)) name = _name.GetString();
-                if (stat.TryGetProperty("defaultvalue", out var _defaultvalue)) defaultValue = _defaultvalue.ToString();
-                sw.Write(newline + name + "=int=" + defaultValue);
-                newline = Environment.NewLine;
-                Count++;
-            }
-
-            sw.Close();
-            if (Count > 0)
-            {
-                var empty = Count == 1 ? "" : "s";
-                _log.Debug($"Successfully got {Count} stat{empty}.");
-            }
-            else
-            {
-                File.Delete(Path.Combine(ConfigPath, "stats.txt"));
-                _log.Debug("No stat found.");
-                return;
-            }
-        }
-        catch (KeyNotFoundException)
-        {
-            _log.Information("No stats, skipping...");
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Failed to generate stats. Skipping...");
-        }
-
-        _log.Debug("Generated stats.");
+            _log.Debug("Generated stats.");
+        });
     }
 
     protected async Task<HttpResponseMessage> LimitSteamWebApiGET(HttpClient http_client,
-        HttpRequestMessage http_request, CancellationTokenSource cts = null)
+        HttpRequestMessage http_request, CancellationTokenSource? cts = null)
     {
         // Steam has a limit of 300 requests every 5 minutes (1 request per second).
         if (DateTime.Now - LastWebRequestTime < TimeSpan.FromSeconds(1))
@@ -502,38 +507,38 @@ internal abstract class Generator
         ///     Achievement description.
         /// </summary>
         [JsonPropertyName("description")]
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         ///     Human readable name, as shown on webpage, game library, overlay, etc.
         /// </summary>
         [JsonPropertyName("displayName")]
-        public string? DisplayName { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
         ///     Is achievement hidden? 0 = false, else true.
         /// </summary>
         [JsonPropertyName("hidden")]
-        public int Hidden { get; set; }
+        public int Hidden { get; set; } = 0;
 
         /// <summary>
         ///     Path to icon when unlocked (colored).
         /// </summary>
         [JsonPropertyName("icon")]
-        public string? Icon { get; set; }
+        public string Icon { get; set; } = string.Empty;
 
         /// <summary>
         ///     Path to icon when locked (grayed out).
         /// </summary>
         // ReSharper disable once StringLiteralTypo
         [JsonPropertyName("icongray")]
-        public string? IconGray { get; set; }
+        public string IconGray { get; set; } = string.Empty;
 
         /// <summary>
         ///     Internal name.
         /// </summary>
         [JsonPropertyName("name")]
-        public string? Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }
 
@@ -547,65 +552,71 @@ internal class GeneratorSteamClient : Generator
 
     private async Task Steam3Start()
     {
-        try
+        await Task.Run(() =>
         {
-            _log.Information("Starting Steam3 Session...");
+            try
+            {
+                _log.Information("Starting Steam3 Session...");
 
-            steam3 = new Steam3Session(
-                new SteamUser.LogOnDetails
-                {
-                    Username = null,
-                    Password = null
-                }
-            );
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Failed to start Steam3 Session.");
-            throw new Exception("Failed to start Steam3 Session.");
-        }
+                steam3 = new Steam3Session(
+                    new SteamUser.LogOnDetails
+                    {
+                        Username = null,
+                        Password = null
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to start Steam3 Session.");
+                throw new Exception("Failed to start Steam3 Session.");
+            }
 
-        _log.Debug("Started Steam3 Session...");
+            _log.Debug("Started Steam3 Session...");
+        });
     }
 
     private async Task<KeyValue> GetSteam3AppSection(uint appId, EAppInfoSection section)
     {
-        try
+        return await Task.Run(() =>
         {
-            if (steam3 == null || steam3.AppInfo == null) return null;
-
-            SteamApps.PICSProductInfoCallback.PICSProductInfo app;
-            if (!steam3.AppInfo.TryGetValue(appId, out app) || app == null) return null;
-
-            var appinfo = app.KeyValues;
-            string section_key;
-
-            switch (section)
+            try
             {
-                case EAppInfoSection.Common:
-                    section_key = "common";
-                    break;
-                case EAppInfoSection.Extended:
-                    section_key = "extended";
-                    break;
-                case EAppInfoSection.Config:
-                    section_key = "config";
-                    break;
-                case EAppInfoSection.Depots:
-                    section_key = "depots";
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+                if (steam3 == null || steam3.AppInfo == null) return null;
 
-            var section_kv = appinfo.Children.Where(c => c.Name == section_key).FirstOrDefault();
-            return section_kv;
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Failed to get Steam3 App Section.");
-            throw new Exception("Failed to get Steam3 App Section.");
-        }
+                SteamApps.PICSProductInfoCallback.PICSProductInfo? app;
+                if (!steam3.AppInfo.TryGetValue(appId, out app) || app == null) return null;
+
+                var appinfo = app.KeyValues;
+                string section_key;
+
+                switch (section)
+                {
+                    case EAppInfoSection.Common:
+                        section_key = "common";
+                        break;
+                    case EAppInfoSection.Extended:
+                        section_key = "extended";
+                        break;
+                    case EAppInfoSection.Config:
+                        section_key = "config";
+                        break;
+                    case EAppInfoSection.Depots:
+                        section_key = "depots";
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+
+                var section_kv = appinfo.Children.Where(c => c.Name == section_key).FirstOrDefault();
+                return section_kv ?? KeyValue.Invalid;
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to get Steam3 App Section.");
+                throw new Exception("Failed to get Steam3 App Section.");
+            }
+        });
     }
 
     private async Task GenerateSupportedLang()
@@ -673,7 +684,6 @@ internal class GeneratorSteamClient : Generator
                 swdepots.Close();
 
                 _log.Debug("Writing branches.json...");
-                uint buildID = 0;
                 if (GameInfoDepots.Children.Exists(x => x.Name == "branches"))
                 {
                     var branches = new JsonArray();
@@ -734,14 +744,15 @@ internal class GeneratorSteamClient : Generator
             if (GameInfoDLCs["listofdlc"] != KeyValue.Invalid)
             {
                 _log.Debug("Getting DLCs from Extended section...");
-                if (GameInfoDLCs["listofdlc"].Value == null)
+                if (GameInfoDLCs["listofdlc"].Value != null)
                 {
+                    DLCIds.AddRange(
+                        new List<string>(GameInfoDLCs["listofdlc"].Value?.Split(',')).ConvertAll(x => Convert.ToUInt32(x)));
+                }
+                else{
                     _log.Information("No DLC in Extended section, skipping...(AppID: {appid})", AppID);
                     return;
                 }
-
-                DLCIds.AddRange(
-                    new List<string>(GameInfoDLCs["listofdlc"].Value.Split(',')).ConvertAll(x => Convert.ToUInt32(x)));
             }
 
             var GameInfoDepots = await GetSteam3AppSection(AppID, EAppInfoSection.Depots).ConfigureAwait(false);
@@ -780,7 +791,7 @@ internal class GeneratorSteamClient : Generator
                 dlcsection.AddComment(" format: ID=name");
                 foreach (var DLC in DLCInfos)
                 {
-                    string name;
+                    string? name;
                     string id;
                     name = DLC.Name;
                     if (DLC.AppId.HasValue)
@@ -824,7 +835,7 @@ internal class GeneratorSteamClient : Generator
 
                 foreach (var DLC in DLCs)
                 {
-                    string name;
+                    string? name;
                     string id;
                     if (DLC.Value != null)
                     {
@@ -851,61 +862,110 @@ internal class GeneratorSteamClient : Generator
     {
         try
         {
+            if (UseXan105API) _log.Debug("Using xan105 API, skipping generate inventory...");
             _log.Debug("Generating inventory info...");
-
-            _log.Debug("Getting inventory digest...");
-            string digest = null;
-            await Task.Run(() => { digest = steam3.GetInventoryDigest(AppID); }).ConfigureAwait(false);
-            if (digest == null)
+            string digest = string.Empty;
+            using (var client = new HttpClient())
             {
-                _log.Debug("No inventory digest, skipping...");
-                return;
-            }
+                _log.Debug("Getting inventory digest...");
+                JsonDocument digestJson;
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+                var apiUrl =
+                    $"https://api.steampowered.com/IInventoryService/GetItemDefMeta/v1?key={SteamWebAPIKey}&appid={AppID}";
 
-            _log.Debug("Getting inventory items...");
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-            client.Timeout = TimeSpan.FromSeconds(30);
-            var response = await LimitSteamWebApiGET(client,
-                    new HttpRequestMessage(HttpMethod.Get,
-                        $"https://api.steampowered.com/IGameInventory/GetItemDefArchive/v0001?appid={AppID}&digest={digest.Trim(new[] { '"' })}"))
-                .ConfigureAwait(false);
+                client.Timeout = TimeSpan.FromSeconds(30);
+                var response = await LimitSteamWebApiGET(client,
+                    new HttpRequestMessage(HttpMethod.Get, apiUrl));
+                var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var responseCode = response.StatusCode;
+                if (responseCode == HttpStatusCode.OK)
+                {
+                    _log.Debug("Got inventory digest.");
+                    digestJson = JsonDocument.Parse(responseBody);
+                }
+                else if (responseCode == HttpStatusCode.Forbidden && !UseXan105API)
+                {
+                    _log.Error(
+                        "Error 403 in getting game inventory digest, please check your Steam Web API key. Skipping...");
+                    throw new Exception("Error 403 in getting game inventory digest.");
+                }
+                else
+                {
+                    _log.Error("Error {Code} in getting game inventory digest. Skipping...", responseCode);
+                    throw new Exception($"Error {responseCode} in getting game inventory digest. Skipping...");
+                }
 
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
                 if (response.Content != null)
                 {
-                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var items = JsonNode.Parse(content.Trim(new[] { '\0' })).Root.AsArray();
-                    if (items.Count > 0)
+                    var responsejson =
+                        JsonDocument.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                    if (responsejson.RootElement.TryGetProperty("response", out var responsedata))
+                        digest = responsedata.GetProperty("digest").ToString();
+                }
+
+                if (digest == null)
+                {
+                    _log.Debug("No inventory digest, skipping...");
+                    return;
+                }
+            }
+
+            using (var client = new HttpClient())
+            {
+                _log.Debug("Getting inventory items...");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+                client.Timeout = TimeSpan.FromSeconds(30);
+                var response = await LimitSteamWebApiGET(client,
+                        new HttpRequestMessage(HttpMethod.Get,
+                            $"https://api.steampowered.com/IGameInventory/GetItemDefArchive/v0001?appid={AppID}&digest={digest.Trim(new[] { '"' })}"))
+                    .ConfigureAwait(false);
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    if (response.Content != null)
                     {
-                        _log.Debug("Found items, generating...");
-                        var inventory = new JsonObject();
-                        var inventorydefault = new JsonObject();
-                        foreach (var item in items)
+                        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var items = JsonNode.Parse(content.Trim(new[] { '\0' }))?.Root.AsArray();
+                        if (items?.Count > 0)
                         {
-                            var x = new JsonObject();
-                            var index = item["itemdefid"].ToString();
+                            _log.Debug("Found items, generating...");
+                            var inventory = new JsonObject();
+                            var inventorydefault = new JsonObject();
+                            foreach (var item in items)
+                            {
+                                var x = new JsonObject();
+                                var index = item?["itemdefid"]?.ToString();
 
-                            foreach (var t in item.AsObject()) x.Add(t.Key, t.Value.ToString());
-                            inventory.Add(index, x);
-                            inventorydefault.Add(index, 1);
+                                if (item != null)
+                                {
+                                    foreach (var t in item.AsObject())
+                                    {
+                                        if (t.Key != null && t.Value != null)
+                                        {
+                                            x.Add(t.Key, t.Value.ToString());
+                                        }
+                                    }
+                                }
+                                inventory.Add(index, x);
+                                inventorydefault.Add(index, 1);
+                            }
+
+                            File.WriteAllText(Path.Combine(ConfigPath, "items.json"), inventory.ToString());
+                            File.WriteAllText(Path.Combine(ConfigPath, "default_items.json"),
+                                inventorydefault.ToString());
+                            return;
                         }
-
-                        File.WriteAllText(Path.Combine(ConfigPath, "items.json"), inventory.ToString());
-                        File.WriteAllText(Path.Combine(ConfigPath, "default_items.json"), inventorydefault.ToString());
+                    }
+                    else
+                    {
+                        _log.Information("No inventory items. Skipping...");
                         return;
                     }
                 }
                 else
                 {
-                    _log.Information("No inventory items. Skipping...");
-                    return;
+                    throw new Exception($"Error {response.StatusCode} in getting game inventory.");
                 }
-            }
-            else
-            {
-                throw new Exception($"Error {response.StatusCode} in getting game inventory.");
             }
 
             _log.Debug("Generated inventory info.");
@@ -916,22 +976,24 @@ internal class GeneratorSteamClient : Generator
         }
         catch (Exception ex)
         {
-            _log.Information(ex, "Failed to generate inventory info. Skipping...");
+            _log.Error(ex, "Failed to generate inventory info. Skipping...");
         }
     }
 
     private async Task GetAppInfo(uint appID)
     {
         await Task.Run(() => { steam3.RequestAppInfo(appID, true); }).ConfigureAwait(false);
-        ;
     }
 
     private async Task<bool> WaitForConnected()
     {
-        steam3.WaitUntilCallback(() => { },
-            () => { return !steam3.bConnecting && steam3.bConnected && steam3.credentials.LoggedOn; });
-        if (steam3.bAborted)
+        await Task.Run(() =>
+        {
+            steam3.WaitUntilCallback(() => { },
+                () => { return !steam3.bConnecting && steam3.bConnected && steam3.credentials.LoggedOn; });
+        });
 
+        if (steam3.bAborted)
         {
             _log.Information("Steam3 connection aborted, skipping generation...");
             return false;
@@ -1035,7 +1097,7 @@ internal class GeneratorSteamWeb : Generator
 
             foreach (var DLC in DLCInfos)
             {
-                string name;
+                string? name;
                 string id;
                 name = DLC.Name;
                 if (DLC.AppId.HasValue)
@@ -1063,7 +1125,7 @@ internal class GeneratorSteamWeb : Generator
         {
             if (UseXan105API) _log.Debug("Using xan105 API, skipping generate inventory...");
             _log.Debug("Generating inventory info...");
-            string digest = null;
+            string digest = string.Empty;
             using (var client = new HttpClient())
             {
                 _log.Debug("Getting inventory digest...");
@@ -1124,8 +1186,8 @@ internal class GeneratorSteamWeb : Generator
                     if (response.Content != null)
                     {
                         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        var items = JsonNode.Parse(content.Trim(new[] { '\0' })).Root.AsArray();
-                        if (items.Count > 0)
+                        var items = JsonNode.Parse(content.Trim(new[] { '\0' }))?.Root.AsArray();
+                        if (items?.Count > 0)
                         {
                             _log.Debug("Found items, generating...");
                             var inventory = new JsonObject();
@@ -1133,9 +1195,18 @@ internal class GeneratorSteamWeb : Generator
                             foreach (var item in items)
                             {
                                 var x = new JsonObject();
-                                var index = item["itemdefid"].ToString();
+                                var index = item?["itemdefid"]?.ToString();
 
-                                foreach (var t in item.AsObject()) x.Add(t.Key, t.Value.ToString());
+                                if (item != null)
+                                {
+                                    foreach (var t in item.AsObject())
+                                    {
+                                        if (t.Key != null && t.Value != null)
+                                        {
+                                            x.Add(t.Key, t.Value.ToString());
+                                        }
+                                    }
+                                }
                                 inventory.Add(index, x);
                                 inventorydefault.Add(index, 1);
                             }

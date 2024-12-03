@@ -7,7 +7,7 @@
         xmlns:utils="clr-namespace:SteamAutoCrack.Utils"
         xmlns:steamAutoCrack="clr-namespace:SteamAutoCrack"
         mc:Ignorable="d"
-        Title="{I18N {x:Static steamAutoCrack:LangKeys.SaveConfigFile}}" Height="300" Width="500"
+        Title="{I18N {x:Static steamAutoCrack:LangKeys.Settings}}" Height="300" Width="500"
         ResizeMode="CanMinimize">
     <Window.DataContext>
         <viewmodels:SettingsViewModel/>

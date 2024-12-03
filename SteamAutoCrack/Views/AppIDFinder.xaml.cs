@@ -65,13 +65,20 @@ public partial class AppIDFinder : Window
         ClosingEvent?.Invoke();
     }
 
-    private async void OK_Click(object sender, RoutedEventArgs e)
+    private void OK_Click(object sender, RoutedEventArgs e)
     {
         var apps = Apps.SelectedCells.ToList();
         if (apps.Count != 0)
         {
             var app = (SteamApp)apps[0].Item;
-            OKEvent?.Invoke((uint)app.AppId);
+            if (app.AppId.HasValue)
+            {
+                OKEvent?.Invoke(app.AppId.Value);
+            }
+            else
+            {
+                OKEvent?.Invoke(0);
+            }
             Close();
         }
     }
@@ -88,8 +95,11 @@ public partial class AppIDFinder : Window
         if (apps.Count != 0)
         {
             var app = (SteamApp)apps[0].Item;
-            OKEvent?.Invoke((uint)app.AppId);
-            Close();
+            if (app.AppId.HasValue)
+            {
+                OKEvent?.Invoke(app.AppId.Value);
+                Close();
+            }
         }
     }
 
@@ -98,7 +108,7 @@ public partial class AppIDFinder : Window
         viewModel.SearchBtnString = Properties.Resources.Searching;
         Search.IsEnabled = false;
         AppName.IsEnabled = false;
-        if ((bool)Fuzzy.IsChecked)
+        if (Fuzzy.IsChecked == true)
             viewModel.Apps = await SteamAppList.GetListOfAppsByNameFuzzy(AppName.Text).ConfigureAwait(false);
         else
             viewModel.Apps = await SteamAppList.GetListOfAppsByName(AppName.Text).ConfigureAwait(false);
